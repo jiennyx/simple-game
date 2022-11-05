@@ -1,0 +1,3 @@
+addr = "0.0.0.0"
+port = 8088
+logFile = "./internal/log/web"

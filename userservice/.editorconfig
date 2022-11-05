@@ -1,0 +1,5 @@
+root = true
+
+[*.go]
+indent_type = tab
+indent_size = 4
