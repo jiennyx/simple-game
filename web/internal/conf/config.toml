@@ -1,3 +1,9 @@
 addr = "0.0.0.0"
 port = 8088
-logFile = "./internal/log/web"
+
+[logger]
+filename = "./internal/log/web"
+maxsize = 10
+maxage = 30
+maxbackups = 5
+level = -1

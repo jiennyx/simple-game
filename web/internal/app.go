@@ -3,6 +3,7 @@ package internal
 import (
 	"fmt"
 	"sync"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/spf13/viper"
@@ -15,15 +16,15 @@ var (
 )
 
 type application struct {
-	engine *gin.Engine
 	config config
+	engine *gin.Engine
 	logger *zap.Logger
 }
 
 type config struct {
-	Addr    string
-	Port    uint
-	LogFile string
+	Addr   string
+	Port   uint
+	Logger loggerConfig
 }
 
 func NewApplication() *application {
@@ -32,6 +33,7 @@ func NewApplication() *application {
 		app.readConfig()
 		app.initLogger()
 	})
+
 	return app
 }
 
@@ -46,10 +48,47 @@ func (a *application) readConfig() {
 		panic("unmarshal config error")
 	}
 
-	fmt.Printf("init config succeed, log will print to: %s", conf.LogFile)
+	fmt.Printf("init config succeed, log will print to: %s",
+		conf.Logger.FileName)
 }
 
-func (a *application) initLogger() {}
+func (a *application) initLogger() {
+	a.logger = newLogger(a.config.Logger)
+}
+
+func (a *application) initEngine() {
+	a.engine = gin.Default()
+}
+
+func (a *application) ginLogger() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		start := time.Now()
+		path := c.Request.URL.Path
+		query := c.Request.URL.RawQuery
+		c.Next()
+
+		cost := time.Since(start)
+		a.logger.Info(path,
+			zap.Int("status", c.Writer.Status()),
+			zap.String("method", c.Request.Method),
+			zap.String("path", path),
+			zap.String("query", query),
+			zap.String("ip", c.ClientIP()),
+			zap.String("user-agent", c.Request.UserAgent()),
+			zap.String("errors", c.Errors.ByType(gin.ErrorTypePrivate).String()),
+			zap.Duration("cost", cost),
+		)
+	}
+}
+
+func (a *application) ginRecover(stack bool) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		defer func() {
+			if err := recover(); err != nil {
+			}
+		}()
+	}
+}
 
 func (a *application) Run() {
 	a.engine.Run(fmt.Sprintf("%s:%d", a.config.Addr, a.config.Port))
