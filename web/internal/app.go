@@ -2,14 +2,8 @@ package internal
 
 import (
 	"fmt"
-	"net"
-	"net/http"
-	"net/http/httputil"
-	"os"
-	"runtime/debug"
-	"strings"
 	"sync"
-	"time"
+	"web/internal/middleware"
 
 	"github.com/gin-gonic/gin"
 	"github.com/spf13/viper"
@@ -28,9 +22,10 @@ type application struct {
 }
 
 type config struct {
-	Addr   string
-	Port   uint
-	Logger loggerConfig
+	Addr    string
+	Port    uint
+	Proxies []string
+	Logger  loggerConfig
 }
 
 func NewApplication() *application {
@@ -62,74 +57,12 @@ func (a *application) initLogger() {
 }
 
 func (a *application) initEngine() {
-	a.engine = gin.Default()
-	a.engine.Use(a.ginLogger(), a.ginRecovery(a.config.Logger.Stack))
-}
-
-func (a *application) ginLogger() gin.HandlerFunc {
-	return func(c *gin.Context) {
-		start := time.Now()
-		path := c.Request.URL.Path
-		query := c.Request.URL.RawQuery
-		c.Next()
-
-		cost := time.Since(start)
-		a.logger.Info(path,
-			zap.Int("status", c.Writer.Status()),
-			zap.String("method", c.Request.Method),
-			zap.String("path", path),
-			zap.String("query", query),
-			zap.String("ip", c.ClientIP()),
-			zap.String("user-agent", c.Request.UserAgent()),
-			zap.String("errors", c.Errors.ByType(gin.ErrorTypePrivate).String()),
-			zap.Duration("cost", cost),
-		)
-	}
-}
-
-func (a *application) ginRecovery(stack bool) gin.HandlerFunc {
-	return func(c *gin.Context) {
-		defer func() {
-			if err := recover(); err != nil {
-				var brokenPipe bool
-				if ne, ok := err.(*net.OpError); ok {
-					if se, ok := ne.Err.(*os.SyscallError); ok {
-						str := strings.ToLower(se.Error())
-						if strings.Contains(str, "broken pipe") ||
-							strings.Contains(str, "connection reset by peer") {
-							brokenPipe = true
-						}
-					}
-				}
-
-				httpRequest, _ := httputil.DumpRequest(c.Request, false)
-				if brokenPipe {
-					a.logger.Error(c.Request.URL.Path,
-						zap.Any("error", err),
-						zap.String("request", string(httpRequest)),
-					)
-					c.Error(err.(error))
-					c.Abort()
-					return
-				}
-
-				if stack {
-					a.logger.Error("[Recovery from panic]",
-						zap.Any("error", err),
-						zap.String("request", string(httpRequest)),
-						zap.String("stack", string(debug.Stack())),
-					)
-				} else {
-					a.logger.Error("[Recovery from panic]",
-						zap.Any("error", err),
-						zap.String("request", string(httpRequest)),
-					)
-				}
-				c.AbortWithStatus(http.StatusInternalServerError)
-			}
-		}()
-		c.Next()
-	}
+	a.engine = gin.New()
+	a.engine.SetTrustedProxies(a.config.Proxies)
+	a.engine.Use(middleware.LoggerHandler(),
+		middleware.RecoveryHandler(a.config.Logger.Stack))
+	a.engine.Use(middleware.ErrorHandler())
+	initRoute(a.engine)
 }
 
 func (a *application) Run() {
