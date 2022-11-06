@@ -2,6 +2,12 @@ package internal
 
 import (
 	"fmt"
+	"net"
+	"net/http"
+	"net/http/httputil"
+	"os"
+	"runtime/debug"
+	"strings"
 	"sync"
 	"time"
 
@@ -32,24 +38,23 @@ func NewApplication() *application {
 		app = new(application)
 		app.readConfig()
 		app.initLogger()
+		app.initEngine()
 	})
 
 	return app
 }
 
 func (a *application) readConfig() {
-	var conf config
-	viper.SetConfigName("conf")
-	viper.AddConfigPath("./internal/conf")
+	viper.SetConfigFile("../internal/conf/config.toml")
 	if err := viper.ReadInConfig(); err != nil {
-		panic("read config error")
+		panic(fmt.Errorf("read config error, err: %v", err))
 	}
-	if err := viper.Unmarshal(&conf); err != nil {
-		panic("unmarshal config error")
+	if err := viper.Unmarshal(&a.config); err != nil {
+		panic(fmt.Errorf("unmarshal config error, err: %v", err))
 	}
 
-	fmt.Printf("init config succeed, log will print to: %s",
-		conf.Logger.FileName)
+	fmt.Printf("init config succeed, log will print to: %s\n",
+		a.config.Logger.FileName)
 }
 
 func (a *application) initLogger() {
@@ -58,6 +63,7 @@ func (a *application) initLogger() {
 
 func (a *application) initEngine() {
 	a.engine = gin.Default()
+	a.engine.Use(a.ginLogger(), a.ginRecovery(a.config.Logger.Stack))
 }
 
 func (a *application) ginLogger() gin.HandlerFunc {
@@ -81,12 +87,48 @@ func (a *application) ginLogger() gin.HandlerFunc {
 	}
 }
 
-func (a *application) ginRecover(stack bool) gin.HandlerFunc {
+func (a *application) ginRecovery(stack bool) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		defer func() {
 			if err := recover(); err != nil {
+				var brokenPipe bool
+				if ne, ok := err.(*net.OpError); ok {
+					if se, ok := ne.Err.(*os.SyscallError); ok {
+						str := strings.ToLower(se.Error())
+						if strings.Contains(str, "broken pipe") ||
+							strings.Contains(str, "connection reset by peer") {
+							brokenPipe = true
+						}
+					}
+				}
+
+				httpRequest, _ := httputil.DumpRequest(c.Request, false)
+				if brokenPipe {
+					a.logger.Error(c.Request.URL.Path,
+						zap.Any("error", err),
+						zap.String("request", string(httpRequest)),
+					)
+					c.Error(err.(error))
+					c.Abort()
+					return
+				}
+
+				if stack {
+					a.logger.Error("[Recovery from panic]",
+						zap.Any("error", err),
+						zap.String("request", string(httpRequest)),
+						zap.String("stack", string(debug.Stack())),
+					)
+				} else {
+					a.logger.Error("[Recovery from panic]",
+						zap.Any("error", err),
+						zap.String("request", string(httpRequest)),
+					)
+				}
+				c.AbortWithStatus(http.StatusInternalServerError)
 			}
 		}()
+		c.Next()
 	}
 }
 

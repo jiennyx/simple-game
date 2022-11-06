@@ -12,6 +12,7 @@ type loggerConfig struct {
 	MaxBackups int
 	MaxAge     int
 	Level      int
+	Stack      bool
 }
 
 func newLogger(conf loggerConfig) *zap.Logger {
