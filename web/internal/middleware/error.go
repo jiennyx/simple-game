@@ -21,6 +21,6 @@ func ErrorHandler() gin.HandlerFunc {
 			return
 		}
 		c.JSON(http.StatusInternalServerError,
-			ginrsp.Error(10001, "server error"))
+			ginrsp.Error(errors.ServerError, "server error"))
 	}
 }

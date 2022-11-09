@@ -1,7 +1,8 @@
 package errors
 
 const (
-	Unauthorized = 10000
+	ServerError  = 10000
+	Unauthorized = 10001
 )
 
 type GinError struct {
