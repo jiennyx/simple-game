@@ -1,4 +1,4 @@
-module web
+module simplegame.com/simplegame/web
 
 go 1.19
 
@@ -8,6 +8,8 @@ require (
 	go.uber.org/zap v1.23.0
 	gopkg.in/natefinch/lumberjack.v2 v2.0.0
 )
+
+require github.com/golang-jwt/jwt/v4 v4.4.2 // indirect
 
 require (
 	github.com/fsnotify/fsnotify v1.5.4 // indirect
@@ -42,4 +44,7 @@ require (
 	gopkg.in/ini.v1 v1.67.0 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
+	simplegame.com/simplegame/common v1.0.0
 )
+
+replace simplegame.com/simplegame/common => ../common

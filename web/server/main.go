@@ -1,6 +1,6 @@
 package main
 
-import "web/internal"
+import "simplegame.com/simplegame/web/internal"
 
 func main() {
 	app := internal.NewApplication()

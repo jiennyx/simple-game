@@ -1,5 +1,9 @@
 package errors
 
+const (
+	Unauthorized = 10000
+)
+
 type GinError struct {
 	Code int
 	Msg  string

@@ -2,8 +2,8 @@ package internal
 
 import (
 	"fmt"
+	"simplegame.com/simplegame/web/internal/middleware"
 	"sync"
-	"web/internal/middleware"
 
 	"github.com/gin-gonic/gin"
 	"github.com/spf13/viper"
@@ -62,6 +62,7 @@ func (a *application) initEngine() {
 	a.engine.Use(middleware.LoggerHandler(),
 		middleware.RecoveryHandler(a.config.Logger.Stack))
 	a.engine.Use(middleware.ErrorHandler())
+	a.engine.Use(middleware.JWTAuthHandler())
 	initRoute(a.engine)
 }
 

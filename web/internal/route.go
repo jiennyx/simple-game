@@ -2,7 +2,7 @@ package internal
 
 import (
 	"net/http"
-	"web/internal/ginrsp"
+	"simplegame.com/simplegame/web/internal/ginrsp"
 
 	"github.com/gin-gonic/gin"
 )
