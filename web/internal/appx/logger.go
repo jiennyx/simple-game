@@ -1,4 +1,4 @@
-package internal
+package appx
 
 import (
 	"go.uber.org/zap"

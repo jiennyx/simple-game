@@ -1,4 +1,4 @@
-package internal
+package appx
 
 import (
 	"net/http"

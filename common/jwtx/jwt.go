@@ -15,6 +15,10 @@ type Claims struct {
 	jwt.StandardClaims
 }
 
+const (
+	issuer = "simpleGame"
+)
+
 var (
 	authSecret    = []byte("simpleGameSecret")
 	refreshSecret = []byte("simpleGameSecret")
@@ -26,7 +30,7 @@ func GenerateToken(info JwtInfo, duration time.Duration) (string, error) {
 		Info: info,
 		StandardClaims: jwt.StandardClaims{
 			ExpiresAt: expirationTime.Unix(),
-			Issuer:    "simpleGame",
+			Issuer:    issuer,
 		},
 	}
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, cls)
@@ -43,4 +47,8 @@ func ParseToken(token string) (*Claims, error) {
 	)
 
 	return cls, err
+}
+
+func IsValidIssuer(str string) bool {
+	return str == issuer
 }

@@ -1,4 +1,4 @@
-package internal
+package appx
 
 import (
 	"fmt"
@@ -40,7 +40,7 @@ func NewApplication() *application {
 }
 
 func (a *application) readConfig() {
-	viper.SetConfigFile("../internal/conf/config.toml")
+	viper.SetConfigFile("../../config/config.toml")
 	if err := viper.ReadInConfig(); err != nil {
 		panic(fmt.Errorf("read config error, err: %v", err))
 	}

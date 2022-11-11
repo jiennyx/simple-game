@@ -9,6 +9,7 @@ import (
 	"simplegame.com/simplegame/web/internal/errors"
 )
 
+// TODO
 func JWTAuthHandler() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		auth := c.Request.Header.Get("Authorization")
@@ -17,14 +18,18 @@ func JWTAuthHandler() gin.HandlerFunc {
 			c.Abort()
 			return
 		}
-		_, err := jwtx.ParseToken(auth)
+		authClaims, err := jwtx.ParseToken(auth)
 		if err != nil && !strings.Contains(err.Error(), "expired") {
 			c.Error(errors.Error(errors.Unauthorized, "unauthorized"))
 			c.Abort()
 			return
 		}
-		// TODO
 		// check auth
+		if !jwtx.IsValidIssuer(authClaims.Issuer) {
+			c.Error(errors.Error(errors.Unauthorized, "unauthorized"))
+			c.Abort()
+			return
+		}
 
 		// check refresh_token
 		refresh := c.Request.Header.Get("RefreshToken")

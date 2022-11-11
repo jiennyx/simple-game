@@ -3,7 +3,7 @@ port = 8088
 proxies = ["0.0.0.0/0", "::/0"]
 
 [logger]
-filename = "../../log/web"
+filename = "../../../log/web"
 maxsize = 10
 maxage = 30
 maxbackups = 5
