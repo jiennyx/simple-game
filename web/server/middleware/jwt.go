@@ -6,7 +6,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"simplegame.com/simplegame/common/jwtx"
-	"simplegame.com/simplegame/web/internal/errors"
+	"simplegame.com/simplegame/web/server/errors"
 )
 
 // TODO

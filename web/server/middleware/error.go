@@ -3,8 +3,8 @@ package middleware
 import (
 	"net/http"
 
-	"simplegame.com/simplegame/web/internal/errors"
-	"simplegame.com/simplegame/web/internal/ginrsp"
+	"simplegame.com/simplegame/web/server/errors"
+	"simplegame.com/simplegame/web/server/ginrsp"
 
 	"github.com/gin-gonic/gin"
 )

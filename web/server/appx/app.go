@@ -2,7 +2,7 @@ package appx
 
 import (
 	"fmt"
-	"simplegame.com/simplegame/web/internal/middleware"
+	"simplegame.com/simplegame/web/server/middleware"
 	"sync"
 
 	"github.com/gin-gonic/gin"
