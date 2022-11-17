@@ -2,6 +2,7 @@ package dao
 
 import (
 	"context"
+	"errors"
 	"time"
 
 	"gorm.io/gorm"
@@ -68,4 +69,21 @@ func (repo *userRepo) Create(
 	}
 
 	return nil
+}
+
+func (repo *userRepo) GetByUid(
+	ctx context.Context,
+	uid uint,
+) (*aggregate.User, error) {
+	po := new(userPO)
+	err := repo.db.WithContext(ctx).Where("uid = ?", uid).Take(po).Error
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, repository.ErrUserNotFound
+		}
+
+		return nil, repository.ErrInternal
+	}
+
+	return po.toAggregate(), nil
 }
