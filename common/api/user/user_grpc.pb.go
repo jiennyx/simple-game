@@ -24,6 +24,8 @@ const _ = grpc.SupportPackageIsVersion7
 type UserClient interface {
 	// register
 	Register(ctx context.Context, in *RegisterReq, opts ...grpc.CallOption) (*RegisterRsp, error)
+	// exist user
+	ExistUser(ctx context.Context, in *ExistUserReq, opts ...grpc.CallOption) (*ExistUserRsp, error)
 }
 
 type userClient struct {
@@ -43,12 +45,23 @@ func (c *userClient) Register(ctx context.Context, in *RegisterReq, opts ...grpc
 	return out, nil
 }
 
+func (c *userClient) ExistUser(ctx context.Context, in *ExistUserReq, opts ...grpc.CallOption) (*ExistUserRsp, error) {
+	out := new(ExistUserRsp)
+	err := c.cc.Invoke(ctx, "/user.User/ExistUser", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // UserServer is the server API for User service.
 // All implementations must embed UnimplementedUserServer
 // for forward compatibility
 type UserServer interface {
 	// register
 	Register(context.Context, *RegisterReq) (*RegisterRsp, error)
+	// exist user
+	ExistUser(context.Context, *ExistUserReq) (*ExistUserRsp, error)
 	mustEmbedUnimplementedUserServer()
 }
 
@@ -58,6 +71,9 @@ type UnimplementedUserServer struct {
 
 func (UnimplementedUserServer) Register(context.Context, *RegisterReq) (*RegisterRsp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Register not implemented")
+}
+func (UnimplementedUserServer) ExistUser(context.Context, *ExistUserReq) (*ExistUserRsp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ExistUser not implemented")
 }
 func (UnimplementedUserServer) mustEmbedUnimplementedUserServer() {}
 
@@ -90,6 +106,24 @@ func _User_Register_Handler(srv interface{}, ctx context.Context, dec func(inter
 	return interceptor(ctx, in, info, handler)
 }
 
+func _User_ExistUser_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ExistUserReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(UserServer).ExistUser(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/user.User/ExistUser",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(UserServer).ExistUser(ctx, req.(*ExistUserReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // User_ServiceDesc is the grpc.ServiceDesc for User service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -100,6 +134,10 @@ var User_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "Register",
 			Handler:    _User_Register_Handler,
+		},
+		{
+			MethodName: "ExistUser",
+			Handler:    _User_ExistUser_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

@@ -3,7 +3,7 @@ package middleware
 import (
 	"net/http"
 
-	"simplegame.com/simplegame/web/server/errors"
+	"simplegame.com/simplegame/web/server/errorx"
 	"simplegame.com/simplegame/web/server/ginrsp"
 
 	"github.com/gin-gonic/gin"
@@ -16,11 +16,11 @@ func ErrorHandler() gin.HandlerFunc {
 			return
 		}
 		// check one
-		if err, ok := c.Errors[0].Err.(*errors.GinError); ok {
+		if err, ok := c.Errors[0].Err.(*errorx.GinError); ok {
 			c.JSON(http.StatusOK, ginrsp.Error(err.Code, err.Msg))
 			return
 		}
 		c.JSON(http.StatusInternalServerError,
-			ginrsp.Error(errors.ServerError, "server error"))
+			ginrsp.Error(errorx.ServerError, "server error"))
 	}
 }

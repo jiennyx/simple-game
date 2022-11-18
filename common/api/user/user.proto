@@ -5,6 +5,8 @@ option go_package = "simplegame.com/simplegame/common/api/user";
 service User {
     // register
     rpc Register(RegisterReq) returns (RegisterRsp) {}
+    // exist user
+    rpc ExistUser(ExistUserReq) returns (ExistUserRsp) {}
 }
 
 message RegisterReq {
@@ -13,3 +15,12 @@ message RegisterReq {
 }
 
 message RegisterRsp {}
+
+message ExistUserReq {
+    string username = 1;
+    string password = 2;
+}
+
+message ExistUserRsp {
+    bool isExisted = 1;
+}

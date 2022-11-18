@@ -16,7 +16,7 @@ type userRepo struct {
 
 var _ repository.UserRepository = (*userRepo)(nil)
 
-func NewAccountRepository(db *gorm.DB) *userRepo {
+func NewUserRepository(db *gorm.DB) *userRepo {
 	return &userRepo{
 		db: db,
 	}
@@ -86,4 +86,24 @@ func (repo *userRepo) GetByUid(
 	}
 
 	return po.toAggregate(), nil
+}
+
+func (repo *userRepo) ExistUser(
+	ctx context.Context,
+	username, password string,
+) (bool, error) {
+	po := new(userPO)
+	err := repo.db.WithContext(ctx).
+		Where("username = ? and password = ?", username, password).
+		First(po).
+		Error
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return false, repository.ErrUserNotFound
+		}
+
+		return false, repository.ErrInternal
+	}
+
+	return true, nil
 }

@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"errors"
 
 	"simplegame.com/simplegame/userservice/domain/aggregate"
 	"simplegame.com/simplegame/userservice/domain/repository"
@@ -16,12 +17,12 @@ type RegisterApplicationService struct {
 type RegisterConfiguration func(rs *RegisterApplicationService) error
 
 func NewRegisterApplicationService(cfgs ...RegisterConfiguration) (
-	*RegisterApplicationService, error) {
-	res := &RegisterApplicationService{}
+	RegisterApplicationService, error) {
+	res := RegisterApplicationService{}
 	for _, cfg := range cfgs {
-		err := cfg(res)
+		err := cfg(&res)
 		if err != nil {
-			return nil, err
+			return res, err
 		}
 	}
 
@@ -58,4 +59,16 @@ func (service *RegisterApplicationService) GetUser(
 	uid uint,
 ) (*aggregate.User, error) {
 	return service.userRepo.GetByUid(ctx, uid)
+}
+
+func (service *RegisterApplicationService) ExistUser(
+	ctx context.Context,
+	username, password string,
+) (bool, error) {
+	isExisted, err := service.userRepo.ExistUser(ctx, username, password)
+	if err != nil && !errors.Is(err, repository.ErrUserNotFound) {
+		return false, err
+	}
+
+	return isExisted, nil
 }

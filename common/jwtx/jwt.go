@@ -6,8 +6,16 @@ import (
 	"github.com/golang-jwt/jwt/v4"
 )
 
+type JWTType string
+
+const (
+	JWTTypeAuth    JWTType = "auth"
+	JWTTypeRefresh JWTType = "refresh"
+)
+
 type JwtInfo struct {
-	ID uint64
+	ID       uint64
+	Username string
 }
 
 type Claims struct {
@@ -24,7 +32,7 @@ var (
 	refreshSecret = []byte("simpleGameSecret")
 )
 
-func GenerateToken(info JwtInfo, duration time.Duration) (string, error) {
+func GenerateToken(tp JWTType, info JwtInfo, duration time.Duration) (string, error) {
 	expirationTime := time.Now().Add(duration)
 	cls := &Claims{
 		Info: info,
@@ -35,14 +43,19 @@ func GenerateToken(info JwtInfo, duration time.Duration) (string, error) {
 	}
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, cls)
 
-	return token.SignedString(token)
+	return token.SignedString(getJWTSecret(tp))
 }
 
-func ParseToken(token string) (*Claims, error) {
+func ParseToken(tp JWTType, token string) (*Claims, error) {
+	var i = len(token)
+	for token[i-1] == ' ' {
+		i--
+	}
+	token = token[:i]
 	cls := new(Claims)
 	_, err := jwt.ParseWithClaims(token, cls,
 		func(t *jwt.Token) (interface{}, error) {
-			return authSecret, nil
+			return getJWTSecret(tp), nil
 		},
 	)
 
@@ -51,4 +64,13 @@ func ParseToken(token string) (*Claims, error) {
 
 func IsValidIssuer(str string) bool {
 	return str == issuer
+}
+
+func getJWTSecret(tp JWTType) []byte {
+	switch tp {
+	case JWTTypeAuth:
+		return authSecret
+	}
+
+	return refreshSecret
 }

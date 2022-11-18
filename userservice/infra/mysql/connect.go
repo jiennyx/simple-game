@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"sync"
 
+	"github.com/spf13/viper"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 )
@@ -57,5 +58,14 @@ func NewDB() *gorm.DB {
 }
 
 func readConfig() config {
-	return config{}
+	conf := config{}
+	viper.SetConfigFile("../../infra/mysql/config/config.toml")
+	if err := viper.ReadInConfig(); err != nil {
+		panic(fmt.Errorf("read config error, err: %v", err))
+	}
+	if err := viper.Unmarshal(&conf); err != nil {
+		panic(fmt.Errorf("unmarshal config error, err: %v", err))
+	}
+
+	return conf
 }

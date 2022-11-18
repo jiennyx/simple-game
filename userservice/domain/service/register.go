@@ -14,12 +14,12 @@ type RegisterDomainService struct {
 type RegisterConfiguration func(rs *RegisterDomainService) error
 
 func NewRegisterDomainService(cfgs ...RegisterConfiguration) (
-	*RegisterDomainService, error) {
-	res := &RegisterDomainService{}
+	RegisterDomainService, error) {
+	res := RegisterDomainService{}
 	for _, cfg := range cfgs {
-		err := cfg(res)
+		err := cfg(&res)
 		if err != nil {
-			return nil, err
+			return res, err
 		}
 	}
 
