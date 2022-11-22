@@ -1,9 +1,16 @@
 package appx
 
 import (
+	"context"
+	"errors"
 	"fmt"
-	"simplegame.com/simplegame/web/server/middleware"
+	"net/http"
+	"os"
+	"os/signal"
 	"sync"
+	"time"
+
+	"simplegame.com/simplegame/web/server/middleware"
 
 	"github.com/gin-gonic/gin"
 	"github.com/spf13/viper"
@@ -19,6 +26,7 @@ type application struct {
 	config config
 	engine *gin.Engine
 	logger *zap.Logger
+	server http.Server
 }
 
 type config struct {
@@ -34,6 +42,7 @@ func NewApplication() *application {
 		app.readConfig()
 		app.initLogger()
 		app.initEngine()
+		app.initServer()
 	})
 
 	return app
@@ -66,6 +75,32 @@ func (a *application) initEngine() {
 	initRoute(a.engine)
 }
 
+func (a *application) initServer() {
+	a.server = http.Server{
+		Addr:    fmt.Sprintf("%s:%d", a.config.Addr, a.config.Port),
+		Handler: a.engine,
+	}
+}
+
 func (a *application) Run() {
-	a.engine.Run(fmt.Sprintf("%s:%d", a.config.Addr, a.config.Port))
+	// a.engine.Run(fmt.Sprintf("%s:%d", a.config.Addr, a.config.Port))
+	go func() {
+		if err := a.server.ListenAndServe(); err != nil &&
+			!errors.Is(err, http.ErrServerClosed) {
+			panic(fmt.Sprintf("run server failed, err: %v", err))
+		}
+	}()
+
+	quit := make(chan os.Signal)
+	signal.Notify(quit, os.Interrupt)
+	<-quit
+	zap.L().Info("Shutdown server")
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	if err := a.server.Shutdown(ctx); err != nil {
+		zap.L().Fatal("server shutdown failed", zap.Error(err))
+	}
+
+	zap.L().Info("server exiting...")
 }
