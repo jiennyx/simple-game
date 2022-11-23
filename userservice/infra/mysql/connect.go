@@ -59,7 +59,7 @@ func NewDB() *gorm.DB {
 
 func readConfig() config {
 	conf := config{}
-	viper.SetConfigFile("../../infra/mysql/config/config.toml")
+	viper.SetConfigFile("../../config/mysql.toml")
 	if err := viper.ReadInConfig(); err != nil {
 		panic(fmt.Errorf("read config error, err: %v", err))
 	}
