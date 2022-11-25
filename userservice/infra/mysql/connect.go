@@ -44,7 +44,7 @@ func NewDB() *gorm.DB {
 		)
 		db, err = gorm.Open(mysql.Open(dsn), &gorm.Config{})
 		if err != nil {
-			panic(fmt.Errorf("read mysql config error, err: %v", err))
+			panic(fmt.Errorf("connect mysql config error, err: %v", err))
 		}
 		sqlDB, err := db.DB()
 		if err != nil {

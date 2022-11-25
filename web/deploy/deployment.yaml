@@ -1,0 +1,37 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: simple-game-web
+  namespace: simple-game
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      name: simple-game-web
+  template:
+    metadata:
+      labels:
+        name: simple-game-web
+    spec:
+      containers:
+        - name: simple-game-web
+          image: imxiejie/simple-game-web:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8088
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: simple-game-web-service
+  namespace: simple-game
+spec:
+  type: NodePort
+  ports:
+    - name: http
+      port: 8088
+      targetPort: 8088
+      nodePort: 30000
+  selector:
+    name: simple-game-web

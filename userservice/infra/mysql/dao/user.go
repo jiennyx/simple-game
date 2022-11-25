@@ -34,7 +34,7 @@ type userPO struct {
 }
 
 func (u *userPO) TableName() string {
-	return "user"
+	return "users"
 }
 
 func (u *userPO) toAggregate() *aggregate.User {
