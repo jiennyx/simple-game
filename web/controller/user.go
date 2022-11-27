@@ -14,10 +14,8 @@ func Register(c *gin.Context) {
 	var reqObj model.RegisterReq
 	err := c.ShouldBind(&reqObj)
 	if err != nil {
-		c.JSON(
-			http.StatusOK,
-			ginrsp.Error(errorx.ParamError, errorx.GetCodeMsg(errorx.ParamError)),
-		)
+		c.Error(errorx.Error(errorx.ParamError,
+			errorx.GetCodeMsg(errorx.ParamError)))
 		return
 	}
 
@@ -28,16 +26,14 @@ func GetAuth(c *gin.Context) {
 	var reqObj model.GetAuthReq
 	err := c.ShouldBind(&reqObj)
 	if err != nil {
-		c.JSON(
-			http.StatusOK,
-			ginrsp.Error(errorx.ParamError, errorx.GetCodeMsg(errorx.ParamError)),
-		)
+		c.Error(errorx.Error(errorx.ParamError,
+			errorx.GetCodeMsg(errorx.ParamError)))
 		return
 	}
 
 	rsp, err := logic.GetAuth(c, reqObj)
 	if err != nil {
-		c.JSON(http.StatusOK, ginrsp.FromError(err))
+		c.Error(err)
 		return
 	}
 

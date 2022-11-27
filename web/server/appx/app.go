@@ -56,9 +56,6 @@ func (a *application) readConfig() {
 	if err := viper.Unmarshal(&a.config); err != nil {
 		panic(fmt.Errorf("unmarshal config error, err: %v", err))
 	}
-
-	fmt.Printf("init config succeed, log will print to: %s\n",
-		a.config.Logger.FileName)
 }
 
 func (a *application) initLogger() {

@@ -1,13 +1,16 @@
 package appx
 
 import (
+	"fmt"
+
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 	"gopkg.in/natefinch/lumberjack.v2"
+	"simplegame.com/simplegame/common/netx"
 )
 
 type loggerConfig struct {
-	FileName   string
+	FileDir    string
 	MaxSize    int
 	MaxBackups int
 	MaxAge     int
@@ -16,8 +19,13 @@ type loggerConfig struct {
 }
 
 func newLogger(conf loggerConfig) *zap.Logger {
+	ip, err := netx.GetLocalIP()
+	if err != nil {
+		panic(fmt.Sprintf("init logger failed, err: %v", err))
+	}
+	filename := fmt.Sprintf("%s/web-%s", conf.FileDir, ip)
 	encoder := getEncoder()
-	writerSyncer := getWriterSyncer(conf.FileName, conf.MaxSize,
+	writerSyncer := getWriterSyncer(filename, conf.MaxSize,
 		conf.MaxBackups, conf.MaxAge)
 	level := getLevel(conf.Level)
 
