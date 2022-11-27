@@ -19,12 +19,26 @@ spec:
           imagePullPolicy: Always
           ports:
             - containerPort: 8088
+          volumeMounts:
+            - name: log
+              mountPath: /root/project/simple-game/log
+            - name: time
+              mountPath: /etc/localtime
+
+      volumes:
+        - name: log
+          nfs:
+            server: 192.168.56.22
+            path: /mnt/log
+        - name: time
+          hostPath:
+            path: /etc/localtime
 
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: simple-game-web-service
+  name: simple-game-web
   namespace: simple-game
 spec:
   type: NodePort

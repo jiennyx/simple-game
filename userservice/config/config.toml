@@ -1,2 +1,2 @@
 network = "tcp"
-port = 30001
+port = 80

@@ -19,17 +19,23 @@ spec:
           imagePullPolicy: Always
           ports:
             - containerPort: 80
+          volumeMounts:
+            - name: time
+              mountPath: /etc/localtime
+      volumes:
+        - name: time
+          hostPath:
+            path: /etc/localtime
 
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: simple-game-userservice-service
+  name: simple-game-userservice
   namespace: simple-game
 spec:
-  type: ClusterIP
+  selector:
+    name: simple-game-userservice
   ports:
     - port: 80
       targetPort: 80
-      protocol: TCP
-      name: grpc

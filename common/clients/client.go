@@ -14,7 +14,10 @@ var (
 // TODO
 func UserClient() user.UserClient {
 	if userClient == nil {
-		conn, err := grpc.Dial("127.0.0.1:30001", grpc.WithInsecure())
+		conn, err := grpc.Dial(
+			"simple-game-userservice:80",
+			grpc.WithInsecure(),
+		)
 		if err != nil {
 			log.Fatal(err)
 		}
