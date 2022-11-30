@@ -34,6 +34,7 @@ metadata:
   name: simple-game-userservice
   namespace: simple-game
 spec:
+  clusterIP: None
   selector:
     name: simple-game-userservice
   ports:

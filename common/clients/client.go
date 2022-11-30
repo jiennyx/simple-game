@@ -15,8 +15,11 @@ var (
 func UserClient() user.UserClient {
 	if userClient == nil {
 		conn, err := grpc.Dial(
-			"simple-game-userservice:80",
+			"dns:///simple-game-userservice:80",
 			grpc.WithInsecure(),
+			grpc.WithDefaultServiceConfig(
+				`{"loadBalancingPolicy": "round_robin"}`,
+			),
 		)
 		if err != nil {
 			log.Fatal(err)
