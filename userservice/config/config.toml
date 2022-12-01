@@ -1,2 +1,8 @@
+servicenname = "userservice"
 network = "tcp"
 port = 80
+
+[etcd]
+endpoints = ["http://192.168.56.21:2379", "http://192.168.56.22:2379"]
+dialtimeout = 30
+dialkeepalivetimeout = 30

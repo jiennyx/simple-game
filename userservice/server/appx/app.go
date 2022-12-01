@@ -27,8 +27,10 @@ type application struct {
 	server *grpc.Server
 }
 type config struct {
-	Network string
-	Port    uint
+	Network     string
+	Port        uint
+	ServiceName string
+	Etcd        etcdConfig
 }
 
 func NewApplication() *application {
