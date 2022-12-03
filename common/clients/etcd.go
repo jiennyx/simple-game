@@ -2,7 +2,6 @@ package clients
 
 import (
 	"context"
-	"encoding"
 	"fmt"
 	"os"
 	"strings"
