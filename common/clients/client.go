@@ -1,31 +1,61 @@
 package clients
 
 import (
-	"log"
+	"context"
+	"math/rand"
+	"sync"
+	"time"
 
 	"google.golang.org/grpc"
 	"simplegame.com/simplegame/common/api/user"
 )
 
-var (
-	userClient user.UserClient
+type Pool struct {
+	clients map[string]map[string][]any
+	lock    sync.RWMutex
+}
+
+const (
+	Userservice = "userservice"
 )
 
-// TODO
-func UserClient() user.UserClient {
-	if userClient == nil {
-		conn, err := grpc.Dial(
-			"dns:///simple-game-userservice:80",
-			grpc.WithInsecure(),
-			grpc.WithDefaultServiceConfig(
-				`{"loadBalancingPolicy": "round_robin"}`,
-			),
-		)
-		if err != nil {
-			log.Fatal(err)
-		}
-		userClient = user.NewUserClient(conn)
+func (pool *Pool) User(ctx context.Context) user.UserClient {
+	return pool.getClient(Userservice, getColor(ctx)).(user.UserClient)
+}
+
+func getColor(ctx context.Context) string {
+	color, ok := ctx.Value("color").(string)
+	if !ok || color == "" {
+		color = "default"
 	}
 
-	return userClient
+	return color
+}
+
+func (pool *Pool) getClient(
+	service, color string,
+) any {
+	pool.lock.RLock()
+	defer pool.lock.RUnlock()
+	servicePool, ok := pool.clients[service]
+	if !ok {
+		return nil
+	}
+	clients, ok := servicePool[color]
+	if !ok {
+		return nil
+	}
+
+	rand.Seed(time.Now().Unix())
+
+	return clients[rand.Intn(len(clients))]
+}
+
+func newClient(service string, conn grpc.ClientConnInterface) interface{} {
+	switch service {
+	case Userservice:
+		return user.NewUserClient(conn)
+	}
+
+	return nil
 }
