@@ -1,4 +1,4 @@
-servicenname = "userservice"
+servicename = "userservice"
 network = "tcp"
 port = 80
 allservices = []
@@ -6,4 +6,4 @@ allservices = []
 [etcd]
 endpoints = ["http://192.168.56.21:2379", "http://192.168.56.22:2379"]
 dialtimeout = 30
-dialkeepalivetimeout = 30
+dialkeepalivetime = 30

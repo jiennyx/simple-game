@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"context"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -30,8 +31,9 @@ func GetAuth(c *gin.Context) {
 			errorx.GetCodeMsg(errorx.ParamError)))
 		return
 	}
+	ctx := context.WithValue(c, "color", c.GetHeader("color"))
 
-	rsp, err := logic.GetAuth(c, reqObj)
+	rsp, err := logic.GetAuth(ctx, reqObj)
 	if err != nil {
 		c.Error(err)
 		return

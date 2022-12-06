@@ -75,6 +75,7 @@ func (a *application) initDB() {
 }
 
 func (a *application) registerService() {
+	fmt.Println(a.config)
 	err := clients.RegisterService(
 		a.config.ServiceName,
 		a.config.IP,

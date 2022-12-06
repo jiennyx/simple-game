@@ -10,6 +10,7 @@ import (
 	"sync"
 	"time"
 
+	"simplegame.com/simplegame/common/clients"
 	"simplegame.com/simplegame/web/server/middleware"
 
 	"github.com/gin-gonic/gin"
@@ -30,10 +31,12 @@ type application struct {
 }
 
 type config struct {
-	Addr    string
-	Port    uint
-	Proxies []string
-	Logger  loggerConfig
+	Addr     string
+	Port     uint
+	Proxies  []string
+	Services []string
+	Logger   loggerConfig
+	Etcd     clients.EtcdConfig
 }
 
 func NewApplication() *application {
@@ -42,6 +45,7 @@ func NewApplication() *application {
 		app.readConfig()
 		app.initLogger()
 		app.initEngine()
+		app.initServicePool()
 		app.initServer()
 	})
 
@@ -70,6 +74,13 @@ func (a *application) initEngine() {
 	a.engine.Use(middleware.ErrorHandler())
 	a.engine.Use(middleware.JWTAuthHandler())
 	initRoute(a.engine)
+}
+
+func (a *application) initServicePool() {
+	err := clients.DiscoverService(a.config.Services, a.config.Etcd)
+	if err != nil {
+		panic(fmt.Sprintf("init service pool failed, err: %v", err))
+	}
 }
 
 func (a *application) initServer() {

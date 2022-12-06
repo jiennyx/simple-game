@@ -18,7 +18,7 @@ func GetAuth(
 ) (model.GetAuthRsp, error) {
 	res := model.GetAuthRsp{}
 
-	rsp, err := clients.UserClient().ExistUser(ctx, &user.ExistUserReq{
+	rsp, err := clients.User(ctx).ExistUser(ctx, &user.ExistUserReq{
 		Username: req.Username,
 		Password: req.Password,
 	})

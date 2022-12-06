@@ -21,7 +21,7 @@ type EtcdConfig struct {
 }
 
 const (
-	keyPrefix = "microservice"
+	keyPrefix = "/microservice"
 )
 
 func getServicePrefix(service string) string {
@@ -30,11 +30,11 @@ func getServicePrefix(service string) string {
 
 func getAddr(key string) string {
 	sli := strings.Split(key, "/")
-	if len(sli) < 3 {
+	if len(sli) < 4 {
 		return ""
 	}
 
-	return sli[2]
+	return sli[3]
 }
 
 func RegisterService(name, ip string, port int, conf EtcdConfig) error {
@@ -47,6 +47,7 @@ func RegisterService(name, ip string, port int, conf EtcdConfig) error {
 		return err
 	}
 	color := os.Getenv("color")
+	fmt.Println(color)
 	if color == "" {
 		color = "default"
 	}
@@ -60,6 +61,13 @@ func RegisterService(name, ip string, port int, conf EtcdConfig) error {
 	if err != nil {
 		return err
 	}
+	resp, err := client.Get(ctx, key)
+	if err != nil {
+		return err
+	}
+	for _, kv := range resp.Kvs {
+		fmt.Println(string(kv.Key))
+	}
 	_, err = client.KeepAlive(ctx, lease.ID)
 	if err != nil {
 		return err
@@ -68,26 +76,26 @@ func RegisterService(name, ip string, port int, conf EtcdConfig) error {
 	return nil
 }
 
-func DiscoverService(services []string, conf EtcdConfig) (*Pool, error) {
+func DiscoverService(services []string, conf EtcdConfig) error {
 	client, err := clientv3.New(clientv3.Config{
 		Endpoints:         conf.Endpoints,
 		DialTimeout:       time.Duration(conf.DialTimeout) * time.Second,
 		DialKeepAliveTime: time.Duration(conf.DialKeepAliveTime) * time.Second,
 	})
 	if err != nil {
-		return nil, err
+		return err
 	}
-	res := &Pool{
+	pool = &Pool{
 		clients: make(map[string]map[string][]any),
 		lock:    sync.RWMutex{},
 	}
 
 	ctx := context.Background()
 	for _, service := range services {
-		go handleServicePool(ctx, client, res, service)
+		go handleServicePool(ctx, client, pool, service)
 	}
 
-	return res, nil
+	return nil
 }
 
 func handleServicePool(
@@ -125,10 +133,10 @@ func handleServicePool(
 func add(pool *Pool, kv *mvccpb.KeyValue) {
 	key, value := string(kv.Key), string(kv.Value)
 	sli := strings.Split(key, "/")
-	if len(sli) < 3 {
+	if len(sli) < 4 {
 		return
 	}
-	service, addr := sli[1], sli[2]
+	service, addr := sli[2], sli[3]
 	pool.lock.Lock()
 	if _, ok := pool.clients[service]; !ok {
 		pool.clients[service] = make(map[string][]any)
@@ -154,10 +162,10 @@ func add(pool *Pool, kv *mvccpb.KeyValue) {
 func del(pool *Pool, kv *mvccpb.KeyValue) {
 	key, value := string(kv.Key), string(kv.Value)
 	sli := strings.Split(key, "/")
-	if len(sli) < 3 {
+	if len(sli) < 4 {
 		return
 	}
-	service, addr := sli[1], sli[2]
+	service, addr := sli[2], sli[3]
 	pool.lock.Lock()
 	if _, ok := pool.clients[service]; !ok {
 		return

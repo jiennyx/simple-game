@@ -10,6 +10,8 @@ import (
 	"simplegame.com/simplegame/common/api/user"
 )
 
+var pool *Pool
+
 type Pool struct {
 	clients map[string]map[string][]any
 	lock    sync.RWMutex
@@ -19,8 +21,8 @@ const (
 	Userservice = "userservice"
 )
 
-func (pool *Pool) User(ctx context.Context) user.UserClient {
-	return pool.getClient(Userservice, getColor(ctx)).(user.UserClient)
+func User(ctx context.Context) user.UserClient {
+	return getClient(Userservice, getColor(ctx)).(user.UserClient)
 }
 
 func getColor(ctx context.Context) string {
@@ -32,7 +34,7 @@ func getColor(ctx context.Context) string {
 	return color
 }
 
-func (pool *Pool) getClient(
+func getClient(
 	service, color string,
 ) any {
 	pool.lock.RLock()
