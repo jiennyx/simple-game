@@ -3,34 +3,34 @@ package service
 import (
 	"context"
 
+	"simplegame.com/simplegame/common/logx"
 	"simplegame.com/simplegame/userservice/domain/entity"
 	"simplegame.com/simplegame/userservice/domain/repository"
 )
 
 type RegisterDomainService struct {
 	userRepo repository.UserRepository
+
+	logger logx.Logger
 }
 
-type RegisterConfiguration func(rs *RegisterDomainService) error
+type RegisterConfiguration func(rs *RegisterDomainService)
 
-func NewRegisterDomainService(cfgs ...RegisterConfiguration) (
+func NewRegisterDomainService(logger logx.Logger, cfgs ...RegisterConfiguration) (
 	RegisterDomainService, error) {
-	res := RegisterDomainService{}
+	res := RegisterDomainService{
+		logger: logger,
+	}
 	for _, cfg := range cfgs {
-		err := cfg(&res)
-		if err != nil {
-			return res, err
-		}
+		cfg(&res)
 	}
 
 	return res, nil
 }
 
 func WithUserRepository(ur repository.UserRepository) RegisterConfiguration {
-	return func(rs *RegisterDomainService) error {
+	return func(rs *RegisterDomainService) {
 		rs.userRepo = ur
-
-		return nil
 	}
 }
 

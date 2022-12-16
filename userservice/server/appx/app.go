@@ -13,6 +13,8 @@ import (
 	"gorm.io/gorm"
 	"simplegame.com/simplegame/common/api/user"
 	"simplegame.com/simplegame/common/clients"
+	"simplegame.com/simplegame/common/logx"
+	"simplegame.com/simplegame/common/logx/zaplog"
 	"simplegame.com/simplegame/common/netx"
 	applicationService "simplegame.com/simplegame/userservice/application/service"
 	domainService "simplegame.com/simplegame/userservice/domain/service"
@@ -27,10 +29,12 @@ var (
 )
 
 type application struct {
-	config config
-	db     *gorm.DB
-	server *grpc.Server
-	pool   map[string]map[string]*grpc.ClientConn
+	config   config
+	db       *gorm.DB
+	server   *grpc.Server
+	pool     map[string]map[string]*grpc.ClientConn
+	logger   logx.Logger
+	logFlush func() error
 }
 
 type config struct {
@@ -74,6 +78,11 @@ func (a *application) initDB() {
 	a.db = mysql.NewDB()
 }
 
+//TODO
+func (a *application) initLogger() {
+	a.logger, a.logFlush = zaplog.NewZapLogger(zaplog.InfoLevel, "todo")
+}
+
 func (a *application) registerService() {
 	fmt.Println(a.config)
 	err := clients.RegisterService(
@@ -102,6 +111,7 @@ func (a *application) cancelService() {
 func (a *application) initServer() {
 	userRepo := dao.NewUserRepository(a.db)
 	registerDomainService, err := domainService.NewRegisterDomainService(
+		a.logger,
 		domainService.WithUserRepository(userRepo),
 	)
 	if err != nil {
@@ -109,6 +119,7 @@ func (a *application) initServer() {
 	}
 	registerApplicationService, err :=
 		applicationService.NewRegisterApplicationService(
+			a.logger,
 			applicationService.WithRegisterDomainService(registerDomainService),
 			applicationService.WithUserRepository(userRepo),
 		)
@@ -116,6 +127,7 @@ func (a *application) initServer() {
 		panic(fmt.Sprintf("create register application service failed, err: %v", err))
 	}
 	userServer, err := facade.NewUserServer(
+		a.logger,
 		facade.WithRegisterApplicationService(registerApplicationService),
 	)
 	if err != nil {
@@ -141,6 +153,7 @@ func (a *application) WaitShutdown() {
 	select {
 	case <-sigs:
 		a.cancelService()
+		a.logFlush()
 		a.server.GracefulStop()
 	}
 }

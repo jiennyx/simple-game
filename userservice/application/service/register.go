@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 
+	"simplegame.com/simplegame/common/logx"
 	"simplegame.com/simplegame/userservice/domain/aggregate"
 	"simplegame.com/simplegame/userservice/domain/repository"
 	"simplegame.com/simplegame/userservice/domain/service"
@@ -12,38 +13,35 @@ import (
 type RegisterApplicationService struct {
 	userRepo              repository.UserRepository
 	registerDomainService service.RegisterDomainService
+
+	logger logx.Logger
 }
 
-type RegisterConfiguration func(rs *RegisterApplicationService) error
+type RegisterConfiguration func(rs *RegisterApplicationService)
 
-func NewRegisterApplicationService(cfgs ...RegisterConfiguration) (
+func NewRegisterApplicationService(logger logx.Logger, cfgs ...RegisterConfiguration) (
 	RegisterApplicationService, error) {
-	res := RegisterApplicationService{}
+	res := RegisterApplicationService{
+		logger: logger,
+	}
 	for _, cfg := range cfgs {
-		err := cfg(&res)
-		if err != nil {
-			return res, err
-		}
+		cfg(&res)
 	}
 
 	return res, nil
 }
 
 func WithUserRepository(ur repository.UserRepository) RegisterConfiguration {
-	return func(rs *RegisterApplicationService) error {
+	return func(rs *RegisterApplicationService) {
 		rs.userRepo = ur
-
-		return nil
 	}
 }
 
 func WithRegisterDomainService(
 	domainService service.RegisterDomainService,
 ) RegisterConfiguration {
-	return func(rs *RegisterApplicationService) error {
+	return func(rs *RegisterApplicationService) {
 		rs.registerDomainService = domainService
-
-		return nil
 	}
 }
 

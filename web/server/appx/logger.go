@@ -23,7 +23,7 @@ func newLogger(conf loggerConfig) *zap.Logger {
 	if err != nil {
 		panic(fmt.Sprintf("init logger failed, err: %v", err))
 	}
-	filename := fmt.Sprintf("%s/web-%s", conf.FileDir, ip)
+	filename := fmt.Sprintf("%s/web-%s.log", conf.FileDir, ip)
 	encoder := getEncoder()
 	writerSyncer := getWriterSyncer(filename, conf.MaxSize,
 		conf.MaxBackups, conf.MaxAge)
@@ -36,6 +36,7 @@ func newLogger(conf loggerConfig) *zap.Logger {
 	return logger
 }
 
+/*
 func getLevel(level int) zapcore.LevelEnabler {
 	return zapcore.Level(level)
 }
@@ -61,3 +62,4 @@ func getWriterSyncer(fileName string, size, backups, age int) zapcore.WriteSynce
 
 	return zapcore.AddSync(lumberJackLogger)
 }
+*/
