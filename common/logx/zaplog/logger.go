@@ -24,6 +24,15 @@ func (l *logger) Error(msg string, kvs ...any) {
 	l.logger.Errorw(msg, kvs...)
 }
 
+type Config struct {
+	Level      int
+	Filename   string
+	MaxSize    int
+	MaxBackups int
+	MaxAge     int
+	Compress   bool
+}
+
 func NewZapLogger(
 	level Level,
 	filename string,

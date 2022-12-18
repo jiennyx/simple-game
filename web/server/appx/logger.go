@@ -36,7 +36,6 @@ func newLogger(conf loggerConfig) *zap.Logger {
 	return logger
 }
 
-/*
 func getLevel(level int) zapcore.LevelEnabler {
 	return zapcore.Level(level)
 }
@@ -62,4 +61,3 @@ func getWriterSyncer(fileName string, size, backups, age int) zapcore.WriteSynce
 
 	return zapcore.AddSync(lumberJackLogger)
 }
-*/

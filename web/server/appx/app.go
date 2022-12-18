@@ -11,6 +11,8 @@ import (
 	"time"
 
 	"simplegame.com/simplegame/common/clients"
+	"simplegame.com/simplegame/common/logx"
+	"simplegame.com/simplegame/common/logx/zaplog"
 	"simplegame.com/simplegame/web/server/middleware"
 
 	"github.com/gin-gonic/gin"
@@ -24,19 +26,27 @@ var (
 )
 
 type application struct {
-	config config
-	engine *gin.Engine
-	logger *zap.Logger
-	server http.Server
+	config   config
+	engine   *gin.Engine
+	server   http.Server
+	logger   logx.Logger
+	logFlush func() error
 }
 
 type config struct {
-	Addr     string
-	Port     uint
-	Proxies  []string
-	Services []string
-	Logger   loggerConfig
-	Etcd     clients.EtcdConfig
+	Web    webConfig
+	Etcd   clients.EtcdConfig
+	Logger zaplog.Config
+}
+
+type webConfig struct {
+	Addr        string
+	ServiceName string
+	IP          string
+	Port        uint
+	Proxies     []string
+	Services    []string
+	Stack       bool
 }
 
 func NewApplication() *application {
@@ -63,21 +73,33 @@ func (a *application) readConfig() {
 }
 
 func (a *application) initLogger() {
-	a.logger = newLogger(a.config.Logger)
+	a.config.Logger.Filename = fmt.Sprintf(
+		a.config.Logger.Filename,
+		a.config.Web.ServiceName,
+		a.config.Web.IP,
+	)
+	a.logger, a.logFlush = zaplog.NewZapLogger(
+		zaplog.Level(a.config.Logger.Level),
+		a.config.Logger.Filename,
+		zaplog.MaxSize(a.config.Logger.MaxSize),
+		zaplog.MaxAge(a.config.Logger.MaxAge),
+		zaplog.MaxBackups(a.config.Logger.MaxBackups),
+		zaplog.Compress(a.config.Logger.Compress),
+	)
 }
 
 func (a *application) initEngine() {
 	a.engine = gin.New()
-	a.engine.SetTrustedProxies(a.config.Proxies)
+	a.engine.SetTrustedProxies(a.config.Web.Proxies)
 	a.engine.Use(middleware.LoggerHandler(),
-		middleware.RecoveryHandler(a.config.Logger.Stack))
+		middleware.RecoveryHandler(a.config.Web.Stack))
 	a.engine.Use(middleware.ErrorHandler())
 	a.engine.Use(middleware.JWTAuthHandler())
 	initRoute(a.engine)
 }
 
 func (a *application) initServicePool() {
-	err := clients.DiscoverService(a.config.Services, a.config.Etcd)
+	err := clients.DiscoverService(a.config.Web.Services, a.config.Etcd)
 	if err != nil {
 		panic(fmt.Sprintf("init service pool failed, err: %v", err))
 	}
@@ -85,7 +107,7 @@ func (a *application) initServicePool() {
 
 func (a *application) initServer() {
 	a.server = http.Server{
-		Addr:    fmt.Sprintf("%s:%d", a.config.Addr, a.config.Port),
+		Addr:    fmt.Sprintf("%s:%d", a.config.Web.Addr, a.config.Web.Port),
 		Handler: a.engine,
 	}
 }

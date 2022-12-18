@@ -44,12 +44,14 @@ type config struct {
 	ServiceName string
 	AllServices []string
 	Etcd        clients.EtcdConfig
+	Logger      zaplog.Config
 }
 
 func NewApplication() *application {
 	appOnce.Do(func() {
 		app = new(application)
 		app.initConfig()
+		app.initLogger()
 		app.initDB()
 		app.registerService()
 		app.initServer()
@@ -78,9 +80,20 @@ func (a *application) initDB() {
 	a.db = mysql.NewDB()
 }
 
-//TODO
 func (a *application) initLogger() {
-	a.logger, a.logFlush = zaplog.NewZapLogger(zaplog.InfoLevel, "todo")
+	a.config.Logger.Filename = fmt.Sprintf(
+		a.config.Logger.Filename,
+		a.config.ServiceName,
+		a.config.IP,
+	)
+	a.logger, a.logFlush = zaplog.NewZapLogger(
+		zaplog.Level(a.config.Logger.Level),
+		a.config.Logger.Filename,
+		zaplog.MaxSize(a.config.Logger.MaxSize),
+		zaplog.MaxAge(a.config.Logger.MaxAge),
+		zaplog.MaxBackups(a.config.Logger.MaxBackups),
+		zaplog.Compress(a.config.Logger.Compress),
+	)
 }
 
 func (a *application) registerService() {

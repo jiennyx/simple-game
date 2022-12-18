@@ -22,6 +22,8 @@ spec:
           volumeMounts:
             - name: time
               mountPath: /etc/localtime
+            - name: log
+              mountPath: /tmp/simple-game/log
           env:
             - name: color
               value: red
@@ -29,6 +31,10 @@ spec:
         - name: time
           hostPath:
             path: /etc/localtime
+        - name: log
+          nfs:
+            server: 192.168.56.22
+            path: /mnt/log
 
 ---
 apiVersion: v1

@@ -21,7 +21,7 @@ spec:
             - containerPort: 8088
           volumeMounts:
             - name: log
-              mountPath: /root/project/simple-game/log
+              mountPath: /tmp/simple-game/log
             - name: time
               mountPath: /etc/localtime
 
